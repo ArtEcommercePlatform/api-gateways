@@ -1,6 +1,5 @@
 package com.artztall.api_gateway.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -10,13 +9,9 @@ import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 @Configuration
 public class GatewayConfig {
-
-    @Value("${cors.allowed-origins}")
-    private String allowedOrigins;
 
     private final JwtAuthFilter jwtAuthFilter;
 
@@ -27,7 +22,7 @@ public class GatewayConfig {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowedOrigins(Collections.singletonList(allowedOrigins));
+        corsConfig.addAllowedOriginPattern("*");
         corsConfig.setMaxAge(3600L);
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         corsConfig.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization"));
@@ -43,9 +38,14 @@ public class GatewayConfig {
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
                 .route("user-service-public", r -> r
-                        .path("/api/v1/auth/register", "/api/v1/auth/authenticate")
+                        .path("/api/auth/signup", "/api/auth/login")
                         .filters(f -> f
                                 .rewritePath("/api/v1/auth/(?<segment>.*)", "/${segment}"))
+                        .uri("lb://user-service"))
+                .route("user-service-artisans", r -> r
+                        .path("/api/users/artisans/**") // Unrestricted route for artisans
+                        .filters(f -> f
+                                .rewritePath("/api/users/artisans/(?<segment>.*)", "/api/users/artisans/${segment}"))
                         .uri("lb://user-service"))
                 .route("user-service", r -> r
                         .path("/api/users/**")
@@ -54,7 +54,7 @@ public class GatewayConfig {
                                 .circuitBreaker(config -> config
                                         .setName("userService")
                                         .setFallbackUri("forward:/fallback/user"))
-                                .rewritePath("/api/users/(?<segment>.*)", "/${segment}"))
+                                .rewritePath("/api/users/(?<segment>.*)", "/api/users/${segment}"))
                         .uri("lb://user-service"))
                 .route("product-service", r -> r
                         .path("/api/products/**")
