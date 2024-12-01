@@ -62,8 +62,7 @@ public class GatewayConfig {
                                 .filter(jwtAuthFilter.apply(new JwtAuthFilter.Config()))
                                 .circuitBreaker(config -> config
                                         .setName("productService")
-                                        .setFallbackUri("forward:/fallback/product"))
-                                .rewritePath("/api/products/(?<segment>.*)", "/${segment}"))
+                                        .setFallbackUri("forward:/fallback/product")))
                         .uri("lb://product-service"))
                 .route("order-service", r -> r
                         .path("/api/orders/**")
