@@ -39,13 +39,9 @@ public class GatewayConfig {
         return builder.routes()
                 .route("user-service-public", r -> r
                         .path("/api/auth/signup", "/api/auth/login")
-                        .filters(f -> f
-                                .rewritePath("/api/v1/auth/(?<segment>.*)", "/${segment}"))
                         .uri("lb://user-service"))
                 .route("user-service-artisans", r -> r
                         .path("/api/users/artisans/**") // Unrestricted route for artisans
-                        .filters(f -> f
-                                .rewritePath("/api/users/artisans/(?<segment>.*)", "/api/users/artisans/${segment}"))
                         .uri("lb://user-service"))
                 .route("user-service", r -> r
                         .path("/api/users/**")
@@ -53,8 +49,7 @@ public class GatewayConfig {
                                 .filter(jwtAuthFilter.apply(new JwtAuthFilter.Config()))
                                 .circuitBreaker(config -> config
                                         .setName("userService")
-                                        .setFallbackUri("forward:/fallback/user"))
-                                .rewritePath("/api/users/(?<segment>.*)", "/api/users/${segment}"))
+                                        .setFallbackUri("forward:/fallback/user")))
                         .uri("lb://user-service"))
                 .route("product-service", r -> r
                         .path("/api/products/**")
@@ -70,8 +65,7 @@ public class GatewayConfig {
                                 .filter(jwtAuthFilter.apply(new JwtAuthFilter.Config()))
                                 .circuitBreaker(config -> config
                                         .setName("orderService")
-                                        .setFallbackUri("forward:/fallback/order"))
-                                .rewritePath("/api/orders/(?<segment>.*)", "/${segment}"))
+                                        .setFallbackUri("forward:/fallback/order")))
                         .uri("lb://order-service"))
                 .route("payment-service", r -> r
                         .path("/api/payments/**")
@@ -79,8 +73,7 @@ public class GatewayConfig {
                                 .filter(jwtAuthFilter.apply(new JwtAuthFilter.Config()))
                                 .circuitBreaker(config -> config
                                         .setName("paymentService")
-                                        .setFallbackUri("forward:/fallback/payment"))
-                                .rewritePath("/api/payments/(?<segment>.*)", "/${segment}"))
+                                        .setFallbackUri("forward:/fallback/payment")))
                         .uri("lb://payment-service"))
                 .route("auction-service", r -> r
                         .path("/api/auctions/**")
@@ -88,8 +81,7 @@ public class GatewayConfig {
                                 .filter(jwtAuthFilter.apply(new JwtAuthFilter.Config()))
                                 .circuitBreaker(config -> config
                                         .setName("auctionService")
-                                        .setFallbackUri("forward:/fallback/auction"))
-                                .rewritePath("/api/auctions/(?<segment>.*)", "/${segment}"))
+                                        .setFallbackUri("forward:/fallback/auction")))
                         .uri("lb://auction-service"))
                 .build();
     }
