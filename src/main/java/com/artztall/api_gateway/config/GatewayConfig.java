@@ -86,6 +86,18 @@ public class GatewayConfig {
                                         .setName("auctionService")
                                         .setFallbackUri("forward:/fallback/auction")))
                         .uri("lb://auction-service"))
+                .route("notification-service", r -> r
+                        .path("/api/notifications/**")
+                        .filters(f -> f
+                                .filter(jwtAuthFilter.apply(new JwtAuthFilter.Config()))
+                                .circuitBreaker(config -> config
+                                        .setName("notificationService")
+                                        .setFallbackUri("forward:/fallback/notification")))
+                        .uri("lb://notification-service"))
+                // WebSocket route for notifications
+                .route("notification-websocket", r -> r
+                        .path("/ws-notifications/**")
+                        .uri("ws://localhost:8085"))
                 .build();
     }
 }
