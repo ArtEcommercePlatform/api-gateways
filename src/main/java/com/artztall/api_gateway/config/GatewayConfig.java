@@ -4,10 +4,12 @@ import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
+import java.time.Duration;
 import java.util.Arrays;
 
 @Configuration
@@ -70,10 +72,11 @@ public class GatewayConfig {
                 .route("payment-service", r -> r
                         .path("/api/payments/**")
                         .filters(f -> f
-                                .filter(jwtAuthFilter.apply(new JwtAuthFilter.Config()))
-                                .circuitBreaker(config -> config
-                                        .setName("paymentService")
-                                        .setFallbackUri("forward:/fallback/payment")))
+                                .retry(retryConfig -> retryConfig
+                                        .setRetries(3)
+                                        .setStatuses(HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.SERVICE_UNAVAILABLE)
+                                )
+                        )
                         .uri("lb://payment-service"))
                 .route("auction-service", r -> r
                         .path("/api/auctions/**")
